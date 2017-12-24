@@ -1,4 +1,4 @@
-//! Implements builtin Rust operators for `Expression`s
+//! Implements builtin Rust operators for `Expression`s.
 //!
 //! Implements operators to all `Expression`s
 //! whose underlying type supports them.
@@ -9,6 +9,43 @@
 //! and so will have very skim documentation, if any.
 
 use std::ops::*;
+
+macro_rules! impl_lazy_unop(
+    ($wrapper:ident -> $op_ty:ident::$op_fn:ident) => {
+        #[derive(Debug, Clone)]
+        pub struct $wrapper<T: $op_ty<Output=O>, O, E: $crate::Expression<T>>(
+            E,
+            ::std::marker::PhantomData<T>,
+            ::std::marker::PhantomData<O>,
+        );
+
+        impl<T, O, E> $crate::Expression<O> for $wrapper<T, O, E>
+            where
+                T: $op_ty<Output=O>,
+                E: $crate::Expression<T>,
+        {
+            fn evaluate(self) -> O {
+                self.0.evaluate().$op_fn()
+            }
+        }
+
+        impl<T, O, E> $op_ty for $crate::Lazy<T, E>
+            where
+                T: $op_ty<Output=O>,
+                E: $crate::Expression<T>,
+        {
+            type Output = $wrapper<T, O, E>;
+
+            fn $op_fn(self) -> Self::Output {
+                $wrapper(
+                    self.0,
+                    ::std::marker::PhantomData,
+                    ::std::marker::PhantomData,
+                )
+            }
+        }
+    };
+);
 
 macro_rules! impl_lazy_binop(
     ($wrapper:ident -> $op_ty:ident::$op_fn:ident) => {
@@ -59,17 +96,35 @@ macro_rules! impl_lazy_binop(
     };
 );
 
+impl_lazy_unop!(LazyNeg -> Neg::neg);
+impl_lazy_unop!(LazyNot -> Not::not);
+
 impl_lazy_binop!(LazyAdd -> Add::add);
 impl_lazy_binop!(LazySub -> Sub::sub);
 impl_lazy_binop!(LazyMul -> Mul::mul);
 impl_lazy_binop!(LazyDiv -> Div::div);
+impl_lazy_binop!(LazyRem -> Rem::rem);
 impl_lazy_binop!(LazyBitAnd -> BitAnd::bitand);
 impl_lazy_binop!(LazyBitOr -> BitOr::bitor);
 impl_lazy_binop!(LazyBitXor -> BitXor::bitxor);
+impl_lazy_binop!(LazyShr -> Shr::shr);
+impl_lazy_binop!(LazyShl -> Shl::shl);
 
 #[cfg(test)]
 mod tests {
     use super::super::{lazy, Expression};
+
+    #[test]
+    fn neg() {
+        let a = lazy(1);
+        assert_eq!((-a).evaluate(), -1);
+    }
+
+    #[test]
+    fn not() {
+        let a = lazy(0b00000001u8);
+        assert_eq!((!a).evaluate(), 0b11111110u8);
+    }
 
     #[test]
     fn add() {
@@ -118,5 +173,19 @@ mod tests {
         let a = lazy(2);
         let b = lazy(3);
         assert_eq!((a ^ b).evaluate(), 1);
+    }
+
+    #[test]
+    fn shr() {
+        let a = lazy(8);
+        let b = lazy(3);
+        assert_eq!((a >> b).evaluate(), 1);
+    }
+
+    #[test]
+    fn shl() {
+        let a = lazy(1);
+        let b = lazy(3);
+        assert_eq!((a << b).evaluate(), 8);
     }
 }

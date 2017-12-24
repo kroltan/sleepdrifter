@@ -1,11 +1,11 @@
-//! Parameters, values which can be filled after the expression's creation
+//! Parameters, values which can be filled after the expression's creation.
 
 use std::cell::Cell;
 use std::rc::Rc;
 
 use super::Expression;
 
-/// A handle to assign the parameter's value
+/// A handle to assign the parameter's value.
 ///
 /// Can be used to set the value after the expression itself
 /// has been consumed, but before it is evaluated.
@@ -18,7 +18,7 @@ impl<T> ParameterContent<T> {
     }
 }
 
-/// Parameter which can be defined later
+/// Parameter which can be defined later.
 ///
 /// A value that is unknown at the time of the expression's definition,
 /// but will be known before it is evaluated.
@@ -32,12 +32,12 @@ impl<T> Parameter<T> {
         (param, ParameterContent(handle))
     }
 
-    /// Creates a parameter with no initial value
+    /// Creates a parameter with no initial value.
     pub fn empty() -> (Self, ParameterContent<T>)  {
         Self::create_with(None)
     }
 
-    /// Creates a parameter with an initial value
+    /// Creates a parameter with an initial value.
     ///
     /// You can still change its value through the returned `Content` handle.
     pub fn new(value: T) -> (Self, ParameterContent<T>) {
@@ -50,7 +50,7 @@ impl<T> Parameter<T> {
 }
 
 impl<T> Expression<T> for Parameter<T> {
-    /// Yields the value of the parameter
+    /// Yields the value of the parameter.
     ///
     /// # Panics
     /// When evaluated without an undefined value.

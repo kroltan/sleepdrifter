@@ -57,20 +57,20 @@ impl<T> Expression<T> for Value<T> {
 /// Expressions can be composed using their `map` method, or,
 /// if their underlying type, allows, operators.
 pub trait Expression<T> {
-    /// Executes the expression
+    /// Executes the expression.
     ///
     /// Consumes the expression, applying all operations and
     /// returning their value.
     fn evaluate(self) -> T;
 
-    /// Transform the value of an expression
+    /// Transform the value of an expression.
     ///
     /// Analogous to `Iterator::map` Creates an expression which transforms a value and assumes
     /// the value of the return of the provided function.
-    fn map<U, F: Fn(T) -> U>(self, f: F) -> Lazy<U, Map<T, Self, U, F>>
+    fn map<U, F: Fn(T) -> U>(self, f: F) -> Lazy<U, LazyMap<T, Self, U, F>>
         where Self: Sized
     {
-        Lazy::new(Map(self, f, PhantomData, PhantomData))
+        Lazy::new(LazyMap(self, f, PhantomData, PhantomData))
     }
 }
 
@@ -78,11 +78,11 @@ pub trait Expression<T> {
 ///
 /// See its documentation for details.
 #[derive(Debug, Clone)]
-pub struct Map<T, E: Expression<T>, U, F: Fn(T) -> U>(E, F, PhantomData<T>, PhantomData<U>);
+pub struct LazyMap<T, E: Expression<T>, U, F: Fn(T) -> U>(E, F, PhantomData<T>, PhantomData<U>);
 
-impl<T, E: Expression<T>, U, F: Fn(T) -> U> Expression<U> for Map<T, E, U, F> {
+impl<T, E: Expression<T>, U, F: Fn(T) -> U> Expression<U> for LazyMap<T, E, U, F> {
     fn evaluate(self) -> U {
-        let Map(expr, f, _, _) = self;
+        let LazyMap(expr, f, _, _) = self;
         f(expr.evaluate())
     }
 }
