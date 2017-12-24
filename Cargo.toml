@@ -1,0 +1,6 @@
+[package]
+name = "sleepdrifter"
+version = "0.1.0"
+authors = ["Leonardo Giovanni Scur <kroltan1@gmail.com>"]
+
+[dependencies]
