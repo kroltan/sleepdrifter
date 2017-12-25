@@ -3,7 +3,7 @@
 use std::cell::Cell;
 use std::rc::Rc;
 
-use super::Expression;
+use super::{Lazy, Expression};
 
 /// A handle to assign the parameter's value.
 ///
@@ -26,21 +26,21 @@ impl<T> ParameterContent<T> {
 pub struct Parameter<T>(Rc<Cell<Option<T>>>);
 
 impl<T> Parameter<T> {
-    fn create_with(value: Option<T>) -> (Self, ParameterContent<T>)  {
+    fn create_with(value: Option<T>) -> (Lazy<T, Self>, ParameterContent<T>)  {
         let param = Parameter(Rc::new(Cell::new(value)));
         let handle = param.0.clone();
-        (param, ParameterContent(handle))
+        (Lazy::new(param), ParameterContent(handle))
     }
 
     /// Creates a parameter with no initial value.
-    pub fn empty() -> (Self, ParameterContent<T>)  {
+    pub fn empty() -> (Lazy<T, Self>, ParameterContent<T>)  {
         Self::create_with(None)
     }
 
     /// Creates a parameter with an initial value.
     ///
     /// You can still change its value through the returned `Content` handle.
-    pub fn new(value: T) -> (Self, ParameterContent<T>) {
+    pub fn new(value: T) -> (Lazy<T, Self>, ParameterContent<T>) {
         Self::create_with(Some(value))
     }
 
@@ -52,10 +52,12 @@ impl<T> Parameter<T> {
 impl<T> Expression<T> for Parameter<T> {
     /// Yields the value of the parameter.
     ///
+    /// Internally mutates this expression, consuming the stored value.
+    ///
     /// # Panics
     /// When evaluated without an undefined value.
     fn evaluate(mut self) -> T {
-        self.take().expect("Parameter value not provided")
+        self.take().expect("Parameter value not provided or already consumed")
     }
 }
 

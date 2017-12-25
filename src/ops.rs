@@ -82,15 +82,15 @@ macro_rules! impl_lazy_binop(
                 EA: $crate::Expression<A>,
                 EB: $crate::Expression<A>,
         {
-            type Output = $wrapper<A, A, O, EA, EB>;
+            type Output = $crate::Lazy<O, $wrapper<A, A, O, EA, EB>>;
 
             fn $op_fn(self, other: EB) -> Self::Output {
-                $wrapper(
+                $crate::Lazy::new($wrapper(
                     self.0, other,
                     ::std::marker::PhantomData,
                     ::std::marker::PhantomData,
                     ::std::marker::PhantomData,
-                )
+                ))
             }
         }
     };

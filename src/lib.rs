@@ -3,15 +3,14 @@
 /// This library revolves around the concept of _expressions_,
 /// which are representations of a future computation. It is
 /// entirely implemented with generic types, no macros involved.
-///
-/// # Example
-///
-///
 
 use std::marker::PhantomData;
 
 pub mod ops;
 pub mod param;
+
+#[cfg(test)]
+mod integration_tests;
 
 /// Re-exports all necessary types for common usage
 pub mod prelude {
