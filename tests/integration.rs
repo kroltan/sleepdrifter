@@ -1,4 +1,6 @@
-use super::prelude::*;
+extern crate sleepdrifter;
+
+use sleepdrifter::prelude::*;
 
 fn pow2(n: f32) -> f32 { n.powf(2.0) }
 

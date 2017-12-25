@@ -1,26 +1,28 @@
-/// A lazy-evaluation library
-///
-/// This library revolves around the concept of _expressions_,
-/// which are representations of a future computation. It is
-/// entirely implemented with generic types, no macros involved.
+//! A lazy-evaluation library
+//!
+//! This library revolves around the concept of _expressions_,
+//! which are representations of a future computation. It is
+//! entirely implemented with generic types, no macros involved.
 
 use std::marker::PhantomData;
 
 pub mod ops;
 pub mod param;
 
-#[cfg(test)]
-mod integration_tests;
-
 /// Re-exports all necessary types for common usage
 pub mod prelude {
-    pub use super::{lazy, Lazy, Expression};
+    pub use super::{lazy, lazyf, Lazy, Expression};
     pub use super::param::{Parameter, ParameterContent};
 }
 
-/// Convenience method to construct a `Value`
+/// Convenience method to create a `Value` expression
 pub fn lazy<T>(value: T) -> Lazy<T, Value<T>> {
     Lazy::new(Value(value))
+}
+
+/// Convenience method to create a `Function` expression
+pub fn lazyf<T, F: FnOnce() -> T>(f: F) -> Lazy<T, Function<T, F>> {
+    Lazy::new(Function(f))
 }
 
 /// Wrapper type which delegates operators into expressions
@@ -47,6 +49,17 @@ pub struct Value<T>(T);
 impl<T> Expression<T> for Value<T> {
     fn evaluate(self) -> T {
         self.0
+    }
+}
+
+/// Wrapper for an argument-less function
+///
+/// Resolves the value with the function's return
+pub struct Function<T, F: FnOnce() -> T>(F);
+
+impl<T, F: FnOnce() -> T> Expression<T> for Function<T, F> {
+    fn evaluate(self) -> T {
+        self.0()
     }
 }
 
@@ -94,6 +107,12 @@ mod tests {
     fn literal() {
         let a = lazy(1);
         assert_eq!(a.evaluate(), 1);
+    }
+
+    #[test]
+    fn function() {
+        let a = lazyf(|| "potatoland".to_string());
+        assert_eq!(a.evaluate(), "potatoland");
     }
 
     #[test]
